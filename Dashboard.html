@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GuardianAlert - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(to bottom right, #ffffff, #ffe6e6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark-mode {
+      background: #222;
+      color: #f0f0f0;
+    }
+
+    header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #F35325;
+      color: white;
+      padding: 15px 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .menu-icon {
+      font-size: 1.8rem;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .search-bar {
+      flex: 1;
+      margin-left: 20px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+
+    .dropdown {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 60px;
+      background: white;
+      color: #333;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 9999;
+      min-width: 180px;
+    }
+
+    .dropdown button {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 10px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .dropdown button:hover {
+      background-color: #f3f3f3;
+    }
+
+    main {
+      flex: 1;
+      width: 90%;
+      max-width: 600px;
+      margin-top: 40px;
+      background: white;
+      border-radius: 10px;
+      padding: 30px 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    body.dark-mode main {
+      background: #333;
+      color: #f0f0f0;
+    }
+
+    h2 {
+      color: #F35325;
+      margin-bottom: 25px;
+    }
+
+    .profile-pic {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #F35325;
+      object-fit: cover;
+      margin-bottom: 15px;
+      transition: border-color 0.3s ease;
+    }
+
+    body.dark-mode .profile-pic {
+      border-color: #ffffff;
+    }
+
+    .user-info {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 30px;
+      text-align: left;
+    }
+
+    .user-info strong {
+      color: #F35325;
+    }
+
+    .qr-container {
+      margin-top: 30px;
+    }
+
+    .qr-container img {
+      width: 250px;
+      height: 250px;
+      margin-top: 10px;
+      border: 2px solid #F35325;
+      border-radius: 10px;
+      transition: border-color 0.3s ease;
+    }
+
+    body.dark-mode .qr-container img {
+      border-color: #ffffff;
+    }
+
+    .qr-container small {
+      display: block;
+      margin-top: 8px;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .search-results div {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .search-results div img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    #alert-type {
+      margin-top: 10px;
+      padding: 6px 8px;
+      font-size: 1rem;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 480px) {
+      header { flex-direction: column; align-items: flex-start; }
+      .search-bar { margin-left: 0; margin-top: 10px; width: 100%; }
+      .menu-icon { margin-bottom: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="menu-icon" id="menu-icon">&#9776;</span>
+  <div class="dropdown" id="dropdown-menu">
+    <button onclick="openSettings('name')">Change Name</button>
+    <button onclick="openSettings('lrn')">Change LRN</button>
+    <button onclick="openSettings('address')">Change Strand/Section</button>
+    <button onclick="openSettings('photo')">Change Profile Picture</button>
+    <label style="display:flex; align-items:center; padding:10px;">
+      Dark Mode
+      <input type="checkbox" id="dark-mode-toggle" style="margin-left:10px;">
+    </label>
+    <button onclick="logout()">Log Out</button>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="search-bar" placeholder="Search users...">
+    <div class="search-results" id="search-results"></div>
+  </div>
+</header>
+
+<main>
+  <h2>Welcome, <span id="display-name">User</span>!</h2>
+  <img id="profile-pic" src="profile.jpg" class="profile-pic" alt="Profile Picture">
+  <div class="user-info" id="user-details">Loading user info...</div>
+  
+  <div class="qr-container">
+    <h3>Parent Alert Options</h3>
+    <select id="alert-type">
+      <option value="sms">SMS</option>
+      <option value="call">Call</option>
+      <option value="email">Email</option>
+      <option value="whatsapp">WhatsApp</option>
+    </select>
+    <img id="qrcode" alt="QR Code" />
+    <small>Scan this QR code to notify your parent.</small>
+  </div>
+  <input type="file" id="file-input" accept="image/*" style="display:none;">
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script>
+const menuIcon = document.getElementById('menu-icon');
+const dropdownMenu = document.getElementById('dropdown-menu');
+menuIcon.addEventListener('click', ()=>{
+  dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+});
+window.addEventListener('click', e=>{
+  if(!menuIcon.contains(e.target) && !dropdownMenu.contains(e.target)){
+    dropdownMenu.style.display='none';
+  }
+});
+
+function getQueryParam(param){
+  return new URLSearchParams(window.location.search).get(param);
+}
+
+function logout(){
+  window.location.href = 'GuardianAlert.html';
+}
+
+window.onload = function(){
+  const username = getQueryParam('user');
+  if(!username){ window.location.href='GuardianAlert.html'; return; }
+  const users = JSON.parse(localStorage.getItem('users')||'{}');
+  const user = users[username];
+  if(!user){ window.location.href='GuardianAlert.html'; return; }
+
+  const fullName = `${user.firstName} ${user.middleName} ${user.lastName}`;
+  document.getElementById('display-name').textContent = fullName;
+
+  const detailsDiv = document.getElementById('user-details');
+  detailsDiv.innerHTML = `
+    <p><strong>Full Name:</strong> ${fullName}</p>
+    <p><strong>Age:</strong> ${user.age}</p>
+    <p><strong>LRN:</strong> ${user.lrn||''}</p>
+    <p><strong>Strand/Section:</strong> ${user.strand||user.schoolYear}</p>
+  `;
+
+  const parentNumber = user.parentPhone?.replace(/\D/g,'')||'';
+  const parentEmail = user.parentEmail || '';
+  const message = encodeURIComponent(`Hello, this is a notification from GuardianAlert about your child ${fullName}.`);
+
+  function generateQR(type){
+    let uri = '';
+    switch(type){
+      case 'sms': uri = `sms:${parentNumber}?body=${message}`; break;
+      case 'call': uri = `tel:${parentNumber}`; break;
+      case 'email': uri = `mailto:${parentEmail}?subject=GuardianAlert Notification&body=${message}`; break;
+      case 'whatsapp': uri = `https://wa.me/${parentNumber.replace('+','')}?text=${message}`; break;
+    }
+    QRCode.toDataURL(uri,{width:250}, function(err,url){
+      if(err){ console.error(err); return; }
+      document.getElementById('qrcode').src=url;
+    });
+  }
+
+  generateQR('sms');
+  document.getElementById('alert-type').addEventListener('change', e=>{
+    generateQR(e.target.value);
+  });
+
+  const darkMode = localStorage.getItem('darkMode') === 'true';
+  document.body.classList.toggle('dark-mode', darkMode);
+  document.getElementById('dark-mode-toggle').checked = darkMode;
+}
+
+// Search bar
+document.getElementById('search-bar').addEventListener('input', ()=>{
+  const input = document.getElementById('search-bar').value.toLowerCase();
+  const resultsDiv = document.getElementById('search-results');
+  resultsDiv.innerHTML='';
+  const users = JSON.parse(localStorage.getItem('users')||'{}');
+  Object.keys(users).forEach(u=>{
+    const user = users[u];
+    const fullName = `${user.firstName} ${user.middleName} ${user.lastName}`;
+    if(fullName.toLowerCase().includes(input)){
+      const div = document.createElement('div');
+      const img = document.createElement('img');
+      img.src = user.photo||'profile.jpg';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = fullName;
+      div.appendChild(img);
+      div.appendChild(nameSpan);
+      div.addEventListener('click',()=>window.location.href=`dashboard.html?user=${encodeURIComponent(u)}`);
+      resultsDiv.appendChild(div);
+    }
+  });
+});
+
+// Settings
+function openSettings(type){
+  const username = getQueryParam('user');
+  if(!username) return;
+  const users = JSON.parse(localStorage.getItem('users')||'{}');
+  const user = users[username];
+  if(!user) return;
+
+  switch(type){
+    case 'name':
+      const first = prompt("Enter First Name:", user.firstName) || user.firstName;
+      const middle = prompt("Enter Middle Name:", user.middleName) || user.middleName;
+      const last = prompt("Enter Last Name:", user.lastName) || user.lastName;
+      user.firstName = first.trim();
+      user.middleName = middle.trim();
+      user.lastName = last.trim();
+      break;
+    case 'lrn':
+      const lrn = prompt("Enter LRN:", user.lrn||'') || user.lrn||'';
+      user.lrn = lrn.trim();
+      break;
+    case 'address':
+      const strand = prompt("Enter Strand/Section:", user.strand||user.schoolYear) || user.strand||user.schoolYear;
+      user.strand = strand.trim();
+      break;
+    case 'photo':
+      const fileInput = document.getElementById('file-input');
+      fileInput.onchange = (e)=>{
+        const file = e.target.files[0];
+        if(file){
+          const reader = new FileReader();
+          reader.onload = function(ev){
+            document.getElementById('profile-pic').src = ev.target.result;
+            user.photo = ev.target.result;
+            users[username] = user;
+            localStorage.setItem('users', JSON.stringify(users));
+          }
+          reader.readAsDataURL(file);
+        }
+      };
+      fileInput.click();
+      break;
+  }
+  users[username] = user;
+  localStorage.setItem('users', JSON.stringify(users));
+  if(type!=='photo') window.location.reload();
+}
+
+// Dark mode toggle
+const darkToggle = document.getElementById('dark-mode-toggle');
+darkToggle.addEventListener('change', e=>{
+  const isDark = e.target.checked;
+  document.body.classList.toggle('dark-mode', isDark);
+  localStorage.setItem('darkMode', isDark);
+  const qrImg = document.getElementById('qrcode');
+  if(qrImg) qrImg.style.borderColor = isDark ? '#ffffff' : '#F35325';
+});
+</script>
+
+</body>
+</html>
